@@ -1,23 +1,21 @@
 import { post, get, del, put } from './index'
-// 把对象转为查询字符串
-import qs from 'qs';
-
-const ENTITY = '/api/categories';
 
 
-// 查看分类列表 {pageNum:'',pageSize:'', keyword:''}
+const ENTITY = '/api/articles';
+
+
 function list ({current=1,pageSize=5,keyword=''}) { 
   return get(`${ENTITY}?pageNum=${current}&pageSize=${pageSize}&keyword=${keyword}`);
 }
 
-// 创建分类
-function create (data) {  //{name:""}
-  return post(`${ENTITY}`,data)
+// 创建
+function create (item) {  //{name:""}
+  return post(`${ENTITY}`,item)
 }
 
 // 更新分类
-function update (category) {
-  return put(`${ENTITY}/${category.id}`,category)
+function update (item) {
+  return put(`${ENTITY}/${item.id}`,item)
 }
 
 // 删除 

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Router, Route,Switch} from 'react-router-dom';
+import { Router, Route,Switch,Redirect} from 'react-router-dom';
 import Home from './pages/home'
 import Admin from './pages/admin'
 // import createHistory from 'history/createHashHistory'; //这个是默认装了的  奇葩错误
@@ -21,8 +21,9 @@ export default class Routers extends Component {
     return (
       <Router history={history}>
         <Switch>
-          <Route exact path="/" component={ Home} />
-          <Route  path="/admin" component={ Admin} />
+          <Route exact path="/"  component={ Home} />
+          <Route path="/admin"  component={Admin} />
+          <Redirect to="/" component={ Home} />
         </Switch>
       </Router>
    )

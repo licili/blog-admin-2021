@@ -10,34 +10,33 @@ export default class Home extends Component {
       if (res.code == 0) {
         if (!isSignUp) {
           // 登录功能
-          message.success('登录成功').then(() => {
+          message.success('登录成功')
             sessionStorage.setItem('username', res.data.user.username)
             this.props.history.push('/admin')
-          })
         } else {
           console.log(res)
-          message.success('注册成功~跳转到登录页').then(() => {
-            // 调到登录页出现问题。组件会复用，信息还在上面，而且没有跳转
-            this.forceUpdate()
+          message.success('注册成功~跳转到登录页')
+          // 调到登录页出现问题。组件会复用，信息还在上面，而且没有跳转
+          console.log(this.userFormRef)
+          this.userFormRef.current.setState({
+            isSignUp:false
           })
         }
-        
       } else {
-        console.log(res)
+        message.error(res.error)
       }
     }).catch(err => {
       console.log(err);
     })
-    
-    
   }
+  userFormRef = React.createRef()
   render() {
     return (
       <div className="home-page">
         <div className="form-wrapper">
           <h1>欢迎光临博客</h1>
           {/* 因为表单内容比较多，我们会把它变为一个独立组件 */}
-          <UserForm onSubmit={ this.handleSubmit}/>
+          <UserForm ref={ this.userFormRef } onSubmit={ this.handleSubmit}/>
         </div>
       </div>
     )
@@ -48,15 +47,17 @@ class UserForm extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      isSignUp:false //默认为登录表单
+      isSignUp:false //默认为登录表单  true为注册表单 
     }
   }
 
   handleClick = (e) => {
     e.preventDefault()
     this.setState({ isSignUp: !this.state.isSignUp })
+    // 重置表单样式
+    this.formRef.current.resetFields()
   }
-
+  formRef = React.createRef()
   render () {
 
 
@@ -89,11 +90,16 @@ class UserForm extends Component {
       } 
       return Promise.resolve()
     }
+
     return (
       <Form
         name="login"
-        className="login-form"
+        ref={this.formRef}
+        className="login-form" 
         onFinish={(value) => {
+          if (this.state.isSignUp) {
+            this.formRef.current.resetFields();
+          }
           this.props.onSubmit(this.state.isSignUp,value)
         }}
       >
@@ -124,7 +130,7 @@ class UserForm extends Component {
           <Button className="login-form-button" type="primary" htmlType="submit">
             {this.state.isSignUp ? '注册':'登录'}
           </Button>
-          <a href="" onClick={this.handleClick}>{this.state.isSignUp ? '已有账号？直接登录' : '没有账号？请注册'}</a>
+          <a href="" onClick={this.handleClick}>{this.state.isSignUp ? ' 已有账号？直接登录' : ' 没有账号？请注册'}</a>
         </Form.Item>
       </Form>
     )

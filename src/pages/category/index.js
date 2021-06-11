@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {Row,Col,Table,Button,Modal,message,Popconfirm,Input,Space,Form} from 'antd'
 import categoryService from '../../service/category'
-
+import {DeleteOutlined,FileAddOutlined} from '@ant-design/icons'
 
 
 export default class Category extends Component {
@@ -13,12 +13,21 @@ export default class Category extends Component {
     keyword: '', // 搜索关键词
     isCreate: true, // 模态框是否为创建状态
     pagination: {}, // 控制分页
+    selectedRowKeys:[], // 选中行的ID数组
     
   }
   // 搜索
   handleSearch = (keyword) => {
 
-
+    this.setState({
+      keyword,
+      pagination: {
+        // 显示为 1 从第一页开始显示
+        current:1
+      }
+    }, () => {
+      this.getList()
+    })
   }
   // 组件挂在后
   componentDidMount () {
@@ -27,7 +36,7 @@ export default class Category extends Component {
   // 因为删除，更新，创建都要获取数据，刷新页面，所以封装为一个方法
   // 获取数据
   getList = () => {
-    categoryService.list({current:this.state.pagination.current}).then(res => {
+    categoryService.list({current:this.state.pagination.current,keyword:this.state.keyword}).then(res => {
       if (parseInt(res.code) === 0) {
         const {items,pageNum:current,pageSize,total } = res.data;
         // (item.key=item._id,item) 他的意思为他们当作一个整体，然后返回最后一个
@@ -114,8 +123,14 @@ export default class Category extends Component {
     })
   }
 
+  onSelectChange = selectedRowKeys => {
+    console.log('selectedRowKeys changed: ', selectedRowKeys);
+    this.setState({ selectedRowKeys });
+  }
+
   editModal = React.createRef();
   render () {
+    const selectedRowKeys = this.state.selectedRowKeys
     // React 需要的 key，如果已经设置了唯一的 dataIndex，可以忽略这个属性
     const columns = [
       {
@@ -135,23 +150,68 @@ export default class Category extends Component {
             okText="确定"
             cancelText="取消"
             onCancel={ ()=>{}}
-            onConfirm={ ()=>console.log('美丽')}
+            onConfirm={ ()=>this.remove(record._id)}
           >
-            <Button type="danger" onClick={()=>this.remove(record._id)}>删除</Button>
+            <Button type="danger">删除</Button>
           </Popconfirm>
         </Space>)
       }
     ]
+    const rowSelection = {
+      selectedRowKeys,
+      onChange: this.onSelectChange,
+      selections: [
+        Table.SELECTION_ALL,
+        Table.SELECTION_INVERT,
+        Table.SELECTION_NONE,
+        {
+          key: 'odd',
+          text: '基数项',
+          onSelect: changableRowKeys => {
+            let newSelectedRowKeys = [];
+            newSelectedRowKeys = changableRowKeys.filter((key, index) => {
+              if (index % 2 !== 0) {
+                return false;
+              }
+              return true;
+            });
+            this.setState({ selectedRowKeys: newSelectedRowKeys });
+          },
+        },
+        {
+          key: 'even',
+          text: '偶数项',
+          onSelect: changableRowKeys => {
+            let newSelectedRowKeys = [];
+            newSelectedRowKeys = changableRowKeys.filter((key, index) => {
+              if (index % 2 !== 0) {
+                return true;
+              }
+              return false;
+            });
+            this.setState({ selectedRowKeys: newSelectedRowKeys });
+          },
+        },
+      ]
+      
+    }
     return (
-      <div>
+      <div> 
         <Row>
-          <Col span="6">
+          <Col span="12">
             <Button.Group>
-              <Button type="default" onClick={this.handleCreate}>创建</Button>
-              <Button type="danger">删除</Button>
+              <Button type="default" icon={<FileAddOutlined/>} onClick={this.handleCreate}>创建</Button>
+              <Popconfirm
+                okText="确定"
+                cancelText="取消"
+                title="确定删除吗？"
+                onConfirm={() => this.remove(this.state.selectedRowKeys)}
+              >
+                <Button type="danger" icon={<DeleteOutlined />}>删除</Button>
+              </Popconfirm>
             </Button.Group>
           </Col>
-          <Col span="18">
+          <Col span="12">
             <Input.Search
               enterButton
               placeholder="请输入搜索的内容"
@@ -165,6 +225,7 @@ export default class Category extends Component {
           bordered
           dataSource={this.state.items}
           columns={columns}
+          rowSelection={rowSelection}
           pagination={this.state.pagination}>
         </Table>
         {/* Modal 会缓存数据做优化，使用destroyOnClose清楚这些缓存 */}
