@@ -6,6 +6,9 @@
   font-weight: bold;
   text-align: center;
 }
+.admin-page .site-layout {
+  min-width: 800px;
+}
 .admin-page .site-layout .site-layout-background {
   background: #fff;
 }

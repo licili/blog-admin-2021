@@ -16,9 +16,10 @@ export default class Admin extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      username: sessionStorage.getItem('username'),
-      breadcrumb: [],
-      routerArr:[]
+      nickename: sessionStorage.getItem('nickname'),
+      breadcrumb: [], // 面包屑
+      routerArr: [], // 右侧菜单
+      article:null, // 文章项
     }
   }
   componentDidMount () {
@@ -111,6 +112,19 @@ export default class Admin extends Component {
     })
   }
 
+  // 保存子组件传来的article
+  handleSaveArticle = (article) => {
+    this.setState({
+      article
+    })
+  }
+  // 清除article属性数据
+  handleRemoveArticle = () => {
+    console.log('运行了吗')
+    this.setState({
+      article:null
+    })
+  }
 
   render () {
     return (
@@ -165,15 +179,15 @@ export default class Admin extends Component {
         </Sider>
         <Layout className="site-layout">
           <Header className="site-layout-background site-layout-header">
-            <span style={{ marginRight: '10px' }}><SmileOutlined /> 欢迎{ this.state.username}</span>
-            <a onClick={this.logout}><ExportOutlined /> 退出</a>
+            <span style={{ marginRight: '10px' }}><SmileOutlined /> 欢迎{ this.state.nickename}</span>
+            <a href="javascrip:;" onClick={this.logout}><ExportOutlined /> 退出</a>
           </Header>
           <Content style={{ margin: '0 16px' }}>
             <Breadcrumb style={{ margin: '16px 0' }}>
               {/* <Breadcrumb.Item><Link to="/admin">首页</Link></Breadcrumb.Item> */}
               {
                 this.state.breadcrumb.map(item => (
-                  <Breadcrumb.Item>
+                  <Breadcrumb.Item key={item.path}>
                     <Link to={item.path}>{ item.name}</Link>
                   </Breadcrumb.Item>
                 ))
@@ -181,11 +195,13 @@ export default class Admin extends Component {
 
               {/* <Breadcrumb.Item>Bill</Breadcrumb.Item> */}
             </Breadcrumb>
-            <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
+            <div className="site-layout-background site-layout-main" >
               <Route exact path="/admin" render={(props) => <Welcome  {...props}/>}/>
               <Route path="/admin/category" component={Category } />
-              <Route exact path="/admin/article" component={ Article} />
-              <Route path="/admin/article/create" component={ CreateArticle} />
+              <Route exact path="/admin/article" render={props => <Article {...props} saveArticle={ this.handleSaveArticle}/>} />
+              {/* <Route exact path="/admin/article" component={ Article} /> */}
+              {/* <Route path="/admin/article/create" component={ CreateArticle} /> */}
+              <Route path="/admin/article/create" render={props => <CreateArticle {...props} article={this.state.article} removeArticle={ this.handleRemoveArticle}/>}  />
             </div>
           </Content>
           <Footer style={{ textAlign: 'center' }}>CopyRight ©2022 Created by lici. All Rights Reserved. </Footer>

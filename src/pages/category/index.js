@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import {Row,Col,Table,Button,Modal,message,Popconfirm,Input,Space,Form} from 'antd'
 import categoryService from '../../service/category'
 import {DeleteOutlined,FileAddOutlined} from '@ant-design/icons'
-
+import './index.less'
 
 export default class Category extends Component {
   state = {
@@ -36,12 +36,15 @@ export default class Category extends Component {
   // 因为删除，更新，创建都要获取数据，刷新页面，所以封装为一个方法
   // 获取数据
   getList = () => {
-    categoryService.list({current:this.state.pagination.current,keyword:this.state.keyword}).then(res => {
+    categoryService.list({ current: this.state.pagination.current, keyword: this.state.keyword }).then(res => {
       if (parseInt(res.code) === 0) {
         const {items,pageNum:current,pageSize,total } = res.data;
-        // (item.key=item._id,item) 他的意思为他们当作一个整体，然后返回最后一个
+        // item => (item.key=item._id,item) 他的意思为他们当作一个整体，然后返回最后一个,由于有警告，忍受不了，就改了
         this.setState({
-          items: items.map(item => (item.key = item._id, item)),
+          items: items.map(item => {
+            item.key = item._id
+            return item
+          }),
           pagination: {
             current, // 当前页码
             pageSize,// 每页条数
@@ -85,7 +88,6 @@ export default class Category extends Component {
   remove = (ids) => {
     categoryService.remove(ids).then(res => {
       if (parseInt(res.code) === 0) {
-        console.log(res)
         message.success(res.data);
         // 删除完，从第一页获取数据
         this.setState({ pagination: { current: 1 } }, () => {
@@ -107,8 +109,7 @@ export default class Category extends Component {
   editOK = () => {
     // 这也太牛逼了吧？？ 
     let formRef = this.editModal.current.formRef
-    let category = formRef.current.getFieldsValue();
-    console.log(category)
+    let category = formRef.current.getFieldsValue(); // 通过隐藏域，把ID的值传递过去
     categoryService[this.state.isCreate ? 'create':'update'](category).then(res => {
       if (parseInt(res.code) === 0) {
         formRef.current.resetFields();
@@ -196,9 +197,9 @@ export default class Category extends Component {
       
     }
     return (
-      <div> 
+      <div className="category-page"> 
         <Row>
-          <Col span="12">
+          <Col span="8">
             <Button.Group>
               <Button type="default" icon={<FileAddOutlined/>} onClick={this.handleCreate}>创建</Button>
               <Popconfirm
@@ -211,7 +212,7 @@ export default class Category extends Component {
               </Popconfirm>
             </Button.Group>
           </Col>
-          <Col span="12">
+          <Col span="8">
             <Input.Search
               enterButton
               placeholder="请输入搜索的内容"

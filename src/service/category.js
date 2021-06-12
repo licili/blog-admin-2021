@@ -23,15 +23,14 @@ function update (category) {
 // 删除 
 // 可能传来ID字符串，也有可能传来一个ID字符串数组
 function remove (ids) {
-  console.log(ids,'传递过来的是啥')
   if (typeof ids === 'string') {
     ids = [ids]
   }
   return del(`${ENTITY}/${ids[0]}`,{ids})
 }
 
-
-
+// 解决了 Assign object to a variable before exporting as module default 警告
+//eslint-disable-next-line 
 export default {
   list,
   create,

@@ -16,7 +16,7 @@ function signout (data) {
 }
 
 
-
+//eslint-disable-next-line 
 export default {
   signup,
   signin,

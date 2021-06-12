@@ -11,13 +11,12 @@ export default class Home extends Component {
         if (!isSignUp) {
           // 登录功能
           message.success('登录成功')
-            sessionStorage.setItem('username', res.data.user.username)
+          console.log(res.data)
+            sessionStorage.setItem('nickname', res.data.user.nickname)
             this.props.history.push('/admin')
         } else {
-          console.log(res)
           message.success('注册成功~跳转到登录页')
           // 调到登录页出现问题。组件会复用，信息还在上面，而且没有跳转
-          console.log(this.userFormRef)
           this.userFormRef.current.setState({
             isSignUp:false
           })
@@ -130,7 +129,8 @@ class UserForm extends Component {
           <Button className="login-form-button" type="primary" htmlType="submit">
             {this.state.isSignUp ? '注册':'登录'}
           </Button>
-          <a href="" onClick={this.handleClick}>{this.state.isSignUp ? ' 已有账号？直接登录' : ' 没有账号？请注册'}</a>
+          {/* The href attribute requires a valid value to be accessible. */}
+          <a href="/#" onClick={this.handleClick}>{this.state.isSignUp ? ' 已有账号？直接登录' : ' 没有账号？请注册'}</a>
         </Form.Item>
       </Form>
     )

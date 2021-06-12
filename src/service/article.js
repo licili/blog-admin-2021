@@ -9,7 +9,7 @@ function list ({current=1,pageSize=5,keyword=''}) {
 }
 
 // 创建
-function create (item) {  //{name:""}
+function create (item) {  
   return post(`${ENTITY}`,item)
 }
 
@@ -21,18 +21,22 @@ function update (item) {
 // 删除 
 // 可能传来ID字符串，也有可能传来一个ID字符串数组
 function remove (ids) {
-  console.log(ids,'传递过来的是啥')
   if (typeof ids === 'string') {
     ids = [ids]
   }
+  console.log(ids,'ids')
   return del(`${ENTITY}/${ids[0]}`,{ids})
 }
 
+function addPv (id) {
+  return get(`${ENTITY}/pv/${id}`)
+}
 
-
+//eslint-disable-next-line 
 export default {
   list,
   create,
   update,
-  remove
+  remove,
+  addPv
 }

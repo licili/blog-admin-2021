@@ -1,0 +1,12 @@
+.article-edit-page .edit-button-wrapper {
+  display: flex;
+  flex-direction: row-reverse;
+  width: 100%;
+  float: right;
+  margin-right: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.article-edit-page .edit-button-wrapper .ant-btn {
+  text-align: right;
+}
