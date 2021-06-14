@@ -1,13 +1,15 @@
 import React, { Component } from 'react'
-import { Table, Input, Popconfirm,Modal, Button, message, Form, Row, Col, Tag} from 'antd'
+import { Table, Input, Popconfirm,Modal, Button, message, Form, Row, Col, Tag,Comment,List,Badge,Space} from 'antd'
 import { PlusCircleOutlined, DeleteOutlined } from '@ant-design/icons'
 import ArticleService from '../../service/article'
-import PropTypes from 'prop-types'
+import CommentService from '../../service/comment'
 import moment from 'moment'
 import 'moment/locale/zh-cn'
 import './index.less'
 //  汉化时间 貌似咩用  ~代表node_modele目录0
 moment.locale('zh-cn'); //locale 时区
+
+const { TextArea } = Input;
 export default class Article extends Component {
   state = {
     items: [],
@@ -16,10 +18,15 @@ export default class Article extends Component {
     keyword: '',
     visible: false, // 模态框是否可见
     articleContent: '',// 文章内容
+    commentListVisible: false, // 评论列表模态框
+    commentItem: {}, // 一条评论
+    commentItems: [], //评论列表
+    commentVisible:false, //评论回复模态框
   }
 
   componentDidMount () {
     this.getList();
+    this.getCommentList()
   }
 
   getList = () => {
@@ -43,6 +50,30 @@ export default class Article extends Component {
       }
     })
   }
+
+  // 获取评论列表
+  getCommentList = () => {
+    CommentService.list({}).then(res => {
+      console.log(res, 'comment')
+      if (parseInt(res.code) === 0) {
+        this.setState({
+          commentItems: res.data.items.map(item => {
+            item.avatar = 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png';
+            item.actions = [
+              <span key="comment-list-reply-to-0" onClick={()=>{this.handleReply(item)}}>回复</span>,
+              <span key="comment-list-reply-to-0">删除</span>,
+              <span key="comment-list-reply-to-0">置顶</span>,
+            ];
+            return item;
+          })
+        })
+      } else {
+        message.error('获取评论失败')
+      }
+    })
+  }
+
+
 
   // 搜索
   handleSearch = (value) => {
@@ -114,16 +145,97 @@ export default class Article extends Component {
   }
   handleCancel = () => {
     this.setState({ visible: false })
-
   }
+
+  handleCommentCancel = () => {
+    this.setState({commentListVisible:false})
+  }
+
   // edit 编辑
   handleEdit = (record) => {
     // 提交给父组件处理
     this.props.saveArticle(record)
     this.props.history.push('/admin/article/create')
   }
+  handleDelComment = (item,fid='') => {
+    if (item.sub) {
+      // 一级评论 
+      CommentService.remove({ fid: item._id, sid: '' }).then(res => {
+        if (parseInt(res.code) === 0) {
+          message.success(res.data)
+          this.getCommentList();
+        } else {
+          message.success(res.error)
+        }
+      })
+    } else {
+      // 二级评论
+      // FComment一级评论ID, SComment二级评论ID,
+      CommentService.remove({fid:fid,sid:item._id}).then(res => {
+        if (parseInt(res.code) === 0) {
+          message.success(res.data)
+          this.getCommentList();
+        } else {
+          message.success(res.error)
+        }
+      })
+    }
+  }
+
+  // 创建评论内容
+  createComment = (data,fid='') => (
+    <Comment
+      key={data._id}
+      actions={[
+        <span key="comment-list-reply-to-0" onClick={()=>{this.handleReply(data,fid)}}>回复</span>,
+        <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消" onConfirm={()=>this.handleDelComment(data,fid)}>
+          <span key="comment-list-reply-to-0">删除</span>
+        </Popconfirm>,
+        <span key="comment-list-reply-to-0">置顶</span>,
+      ]}
+      author={data.user.nickname}
+      avatar={data.user.avatar }
+      content={data.content}
+      datetime={moment(data.createAt).fromNow()}
+    >
+      {data.sub && data.sub.map((item) => {
+        return this.createComment(item,data._id)
+      })}
+    </Comment>
+  )
+
+  // 提交 （一级/二级）评论
+  handleSubmitComment = (values) => {
+
+    let obj = {};
+
+    obj['id'] = this.state.commentItem.sub ? this.state.commentItem._id : this.state.fid;
+    values.content = '@' + this.state.commentItem.user.nickname + ' ' + values.content;
+    obj['sub'] = values;
+    console.log(obj,'handleSubmitComment')
+    CommentService.update(obj).then(res => {
+      if (parseInt(res.code) === 0) {
+        message.success(res.data);
+        this.setState({
+          commentVisible:false
+        },this.getCommentList)
+      } else {
+        message.error(res.error)
+      }
+    })
+  }
+
+    // handleReply
+  handleReply = (item,fid='') => {
+    this.setState({
+      commentVisible: true,
+      commentItem: item,
+      fid
+    })
+  }
 
   render () {
+    let that = this;
     const columns = [
       {
         title: '标题',
@@ -201,7 +313,7 @@ export default class Article extends Component {
             <>
               <Button type="dashed" style={{ marginLeft: 5, marginTop: 2 }} onClick={() => this.handlePreview(record)}>查看</Button>
               <Button type="primary" style={{marginLeft:5,marginTop:2}} onClick={()=>this.handleEdit(record)}>编辑</Button>
-              <Button type="primary" style={{marginLeft:5,marginTop:2}}>评论</Button>
+              <Button type="primary" style={{marginLeft:5,marginTop:2}} onClick={()=>this.setState({commentListVisible  :true})}>评论</Button>
               <Popconfirm
                 okText="确定"
                 cancelText="取消"
@@ -219,6 +331,16 @@ export default class Article extends Component {
     const rowSelection = {
       onChange: this.onSelectChange,
     }
+
+
+    const loadMore = <div style={{
+      textAlign: 'center',
+      marginTop: 12,
+      height: 32,
+      lineHeight:'32px'
+    }}>
+      <Button>loading more</Button>
+    </div>
     return (
       <Row className="article-page">
         <Col span={8}>
@@ -260,6 +382,52 @@ export default class Article extends Component {
           >
             <div dangerouslySetInnerHTML={{__html:this.state.articleContent}}>
             </div>
+          </Modal>
+          <Modal
+            visible={this.state.commentListVisible}
+            title="评论列表"
+            closable
+            footer={null}
+            onCancel={this.handleCommentCancel}
+          >
+            <List
+              className="comment-list"
+              itemLayout="horizontal"
+              dataSource={this.state.commentItems}
+              loadMore={loadMore}
+              renderItem={item => (
+                <li>
+                  {
+                    this.createComment(item)
+                  }
+                </li>
+              )}
+            >
+            </List>
+          </Modal>
+          <Modal
+            className="comment-modal"
+            okText="评论"
+            onCancel={()=>this.setState({commentVisible:false})}
+            closable={false}
+            footer={null}
+            destroyOnClose
+            visible={this.state.commentVisible}>
+            <Form onFinish={this.handleSubmitComment}>  
+              <Form.Item name="content">
+                <TextArea rows={ 4} autoSize={ {minRows:4,maxRows: 4} }/>
+              </Form.Item>
+              <Form.Item>
+                <Space>
+                  <Button htmlType="submit" loading={false}  type="text">
+                  评论
+                  </Button>
+                  <Button  loading={false} onClick={()=>{this.setState({commentVisible:false})}} type="text">
+                    取消
+                  </Button>
+                </Space>
+              </Form.Item>
+            </Form>
           </Modal>
         </Col>
       </Row>
