@@ -33,7 +33,7 @@ export  function put(url, data) {
   }).then(res => res.data)
 }
 
-export  function del(url,data) {
+export function del (url, data) {
   return axios({
     ...config,
     method: 'delete',

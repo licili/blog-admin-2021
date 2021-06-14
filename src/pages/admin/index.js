@@ -31,6 +31,8 @@ export default class Admin extends Component {
     })
     
   }
+
+  // 退出登录
   logout = () => {
     // 1. 从服务器上调用退出接口
     // 2. 把sessionStorage清掉
@@ -38,12 +40,11 @@ export default class Admin extends Component {
     service.signout().then(res => {
       if (parseInt(res.code) === 0) {
         sessionStorage.removeItem('username');
-        message.success(res.data).then(() => {
-          // console.log(this)
-          // 只有Route渲染出来的组件才有history属性。
-          // 如果不是在Route渲染出来的组件，就要使用WithRouter包裹，才会有这个属性
-          this.props.history.push('/')
-        })
+        message.success(res.data);
+        // console.log(this)
+        // 只有Route渲染出来的组件才有history属性。
+        // 如果不是在Route渲染出来的组件，就要使用WithRouter包裹，才会有这个属性
+        this.props.history.push('/')
       } else {
         message.error('退出失败')
       }

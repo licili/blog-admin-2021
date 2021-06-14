@@ -20,3 +20,6 @@ body,
   height: 100%;
   background-color: skyblue;
 }
+.comment-modal .ant-form-item {
+  margin-bottom: 5px;
+}
